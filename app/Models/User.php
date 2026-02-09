@@ -2,47 +2,86 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
-        'email',
         'password',
+        'email',
+        'nama_lengkap',
+        'nomor_identitas',
+        'role_id',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    // Relasi ke Role
+    public function role()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsTo(Role::class);
+    }
+
+    // Relasi ke Peminjaman
+    public function peminjamans()
+    {
+        return $this->hasMany(Peminjaman::class);
+    }
+
+    // Relasi ke Activity Log
+    public function activityLogs()
+    {
+        return $this->hasMany(Aktivitas::class);
+    }
+
+    // Relasi ke Pengembalian yang diterima
+    public function pengembaliansDiterima()
+    {
+        return $this->hasMany(Pengembalian::class, 'diterima_oleh');
+    }
+
+    // Helper methods untuk check role
+    public function isAdmin()
+    {
+        return $this->role_id === Role::ADMIN;
+    }
+
+    public function isPetugas()
+    {
+        return $this->role_id === Role::PETUGAS;
+    }
+
+    public function isSiswa()
+    {
+        return $this->role_id === Role::SISWA;
+    }
+
+    // Scope untuk filter by role
+    public function scopeAdmin($query)
+    {
+        return $query->where('role_id', Role::ADMIN);
+    }
+
+    public function scopePetugas($query)
+    {
+        return $query->where('role_id', Role::PETUGAS);
+    }
+
+    public function scopeSiswa($query)
+    {
+        return $query->where('role_id', Role::SISWA);
     }
 }
