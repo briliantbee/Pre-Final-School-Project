@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             AlatSeeder::class,
             PeminjamanSeeder::class,
             PengembalianSeeder::class,
+            DendaSeeder::class,
         ]);
     }
 }

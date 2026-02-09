@@ -1,6 +1,6 @@
 @extends('layouts.sidebar')
 
-@section('title', 'Profile')
+@section('title', 'Activity Log')
 
 @section('navigation')
 <a href="{{ route('admin.dashboard') }}" class="flex items-center px-6 py-3 text-blue-100 hover:bg-blue-700 hover:border-l-4 hover:border-blue-400 transition-all">
@@ -24,7 +24,7 @@
     Kategori Alat
 </a>
 
-<a href="{{ route('admin.alats.index') }}" class="flex items-center px-6 py-3 text-blue-100 hover:bg-blue-700 hover:border-l-4 hover:border-blue-400 transition-all">
+<a href="{{ route('admin.alats.index') }}" class="flex items-center px-6 py-3 text-white bg-blue-700 hover:bg-blue-700 hover:border-l-4 hover:border-blue-400 transition-all">
     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
     </svg>
@@ -52,7 +52,7 @@
     Denda
 </a>
 
-<a href="{{ route('admin.aktivitas.index') }}" class="flex items-center px-6 py-3 text-blue-100 hover:bg-blue-700 hover:border-l-4 hover:border-blue-400 transition-all">
+<a href="{{ route('admin.aktivitas.index') }}" class="flex items-center px-6 py-3 text-white bg-blue-700 border-l-4 border-blue-400 transition-all">
     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
     </svg>
@@ -62,25 +62,51 @@
 
 
 @section('content')
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
-            </div>
+<div>
+    <div class="mb-6 flex items-start justify-between gap-6">
+        <div>
+            <h2 class="text-2xl font-semibold">Activity Log</h2>
+            <p class="text-sm text-gray-600">Riwayat aktivitas pengguna — filter menurut kata kunci atau rentang tanggal.</p>
+        </div>
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
-
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
+        <div class="flex items-center gap-4">
+            <form action="{{ route('admin.aktivitas.index') }}" method="GET" class="flex items-center gap-2">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari aktivitas, deskripsi, atau username" class="px-3 py-2 border rounded-lg" />
+                <input type="date" name="date_from" value="{{ request('date_from') }}" class="px-3 py-2 border rounded-lg" />
+                <input type="date" name="date_to" value="{{ request('date_to') }}" class="px-3 py-2 border rounded-lg" />
+                <button type="submit" class="px-3 py-2 bg-gray-100 rounded">Filter</button>
+            </form>
         </div>
     </div>
+
+    <div class="grid gap-4">
+        @forelse($aktivitas as $a)
+            <div class="bg-white rounded-lg shadow p-4 flex justify-between items-start">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($a->created_at)->format('d M Y H:i') }}</div>
+                        <div class="text-sm text-gray-400">•</div>
+                        <div class="text-sm text-gray-500">By: {{ $a->user->name ?? $a->user->username ?? 'User' }}</div>
+                    </div>
+
+                    <h3 class="mt-2 text-lg font-semibold">{{ ucfirst($a->aktivitas) }}</h3>
+                    @if($a->deskripsi)
+                        <p class="mt-1 text-sm text-gray-600">{{ Str::limit($a->deskripsi, 200) }}</p>
+                    @endif
+
+                    <div class="mt-3 text-xs text-gray-400">IP: {{ $a->ip_address ?? '-' }} · UA: {{ Str::limit($a->user_agent ?? '-', 80) }}</div>
+                </div>
+
+                <div class="ml-4 text-right">
+                    <a href="{{ route('admin.aktivitas.show', $a->id) }}" class="px-3 py-1 border rounded text-sm">Detail</a>
+                </div>
+            </div>
+        @empty
+            <div class="bg-white rounded-lg shadow p-6 text-center text-gray-600">Tidak ada aktivitas ditemukan.</div>
+        @endforelse
+    </div>
+
+    <div class="mt-6">{{ $aktivitas->links() }}</div>
+</div>
+
 @endsection

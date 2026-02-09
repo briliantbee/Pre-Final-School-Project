@@ -1,6 +1,6 @@
 @extends('layouts.sidebar')
 
-@section('title', 'Profile')
+@section('title', 'Detail Pengembalian')
 
 @section('navigation')
 <a href="{{ route('admin.dashboard') }}" class="flex items-center px-6 py-3 text-blue-100 hover:bg-blue-700 hover:border-l-4 hover:border-blue-400 transition-all">
@@ -38,7 +38,7 @@
     Peminjaman
 </a>
 
-<a href="{{ route('admin.pengembalians.index') }}" class="flex items-center px-6 py-3 text-blue-100 hover:bg-blue-700 hover:border-l-4 hover:border-blue-400 transition-all">
+<a href="{{ route('admin.pengembalians.index') }}" class="flex items-center px-6 py-3 text-white bg-blue-700 border-l-4 border-blue-400">
     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
     </svg>
@@ -60,27 +60,73 @@
 </a>
 @endsection
 
-
 @section('content')
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
+<div class="max-w-3xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold">Detail Pengembalian</h1>
+            <p class="text-sm text-gray-600">Rincian pengembalian dan informasi denda (jika ada).</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('admin.pengembalians.index') }}" class="px-4 py-2 bg-gray-100 rounded">Kembali</a>
+        </div>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <div class="text-sm text-gray-500">Kode Peminjaman</div>
+                <div class="font-medium text-lg">{{ $pengembalian->peminjaman->kode_peminjaman ?? '-' }}</div>
+
+                <div class="mt-4 text-sm text-gray-500">Pengembali</div>
+                <div class="font-medium">{{ $pengembalian->peminjaman->user->name ?? $pengembalian->peminjaman->user->username ?? $pengembalian->peminjaman->user->email }}</div>
+
+                <div class="mt-4 text-sm text-gray-500">Alat</div>
+                <div class="font-medium">{{ $pengembalian->peminjaman->alat->nama_alat ?? '-' }} ({{ $pengembalian->peminjaman->alat->kode_alat ?? '-' }})</div>
+
+                <div class="mt-4 text-sm text-gray-500">Kategori</div>
+                <div class="font-medium">{{ $pengembalian->peminjaman->alat->kategori->nama_kategori ?? '-' }}</div>
             </div>
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
+            <div>
+                <div class="text-sm text-gray-500">Tanggal Pengembalian</div>
+                <div class="font-medium">{{ \Carbon\Carbon::parse($pengembalian->tanggal_pengembalian)->format('d M Y') }}</div>
+
+                <div class="mt-4 text-sm text-gray-500">Jumlah Dikembalikan</div>
+                <div class="font-medium">{{ $pengembalian->jumlah_dikembalikan }}</div>
+
+                <div class="mt-4 text-sm text-gray-500">Kondisi Alat</div>
+                <div class="font-medium capitalize">{{ $pengembalian->kondisi_alat ?? '-' }}</div>
+
+                <div class="mt-4 text-sm text-gray-500">Terlambat</div>
+                <div class="font-medium">{{ $pengembalian->terlambat ? 'Ya' : 'Tidak' }} @if($pengembalian->terlambat) ({{ $pengembalian->hari_terlambat }} hari) @endif</div>
+            </div>
+        </div>
+
+        @if($pengembalian->catatan)
+            <div class="mt-6">
+                <div class="text-sm text-gray-500">Catatan</div>
+                <div class="mt-2 text-gray-800">{{ $pengembalian->catatan }}</div>
+            </div>
+        @endif
+
+        <div class="mt-6 grid grid-cols-2 gap-4">
+            <div>
+                <div class="text-sm text-gray-500">Diterima Oleh</div>
+                <div class="font-medium">{{ $pengembalian->diterimaDosen->name ?? $pengembalian->diterimaDosen->username ?? '-' }}</div>
             </div>
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
+            <div>
+                <div class="text-sm text-gray-500">Denda</div>
+                @if($pengembalian->denda)
+                    <div class="font-medium">Rp {{ number_format($pengembalian->denda->jumlah ?: 0, 0, ',', '.') }}</div>
+                    <div class="text-sm text-gray-500">Status: {{ $pengembalian->denda->status ?? '-' }}</div>
+                @else
+                    <div class="font-medium">-</div>
+                @endif
             </div>
         </div>
     </div>
+</div>
+
 @endsection
