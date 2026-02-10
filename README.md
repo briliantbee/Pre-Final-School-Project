@@ -1,59 +1,80 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PINJAM AJA DULU — Aplikasi Manajemen Peminjaman
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Ringkasan singkat: aplikasi Laravel untuk mengelola katalog alat, peminjaman, pengembalian, dan denda pada lingkungan sekolah/kampus.
 
-## About Laravel
+## Fitur Utama
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Manajemen alat (CRUD)
+- Permintaan peminjaman oleh peminjam
+- Persetujuan / penolakan dan penyerahan alat oleh petugas
+- Pemrosesan pengembalian (kondisi, terlambat, denda otomatis)
+- Upload bukti pembayaran denda (peminjam)
+- Log aktivitas untuk tindakan penting
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Struktur Proyek (ringkasan)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- `app/` — model, controller, provider
+    - `app/Http/Controllers/Petugas` — controller untuk petugas (peminjaman, pengembalian, denda)
+    - `app/Http/Controllers/Peminjam` — controller untuk peminjam
+- `resources/views/` — Blade views
+    - `resources/views/petugas/peminjamans` — tampilan manajemen peminjaman petugas
+    - `resources/views/petugas/pengembalians` — tampilan pengembalian petugas (index/create/show)
+    - `resources/views/peminjam` — tampilan untuk peminjam (peminjaman, pengembalian, denda)
+- `routes/web.php` — deklarasi route; lihat grup `admin`, `petugas`, `peminjam` untuk endpoint role-specific
 
-## Learning Laravel
+## Setup & Jalankan (dev)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+1. Salin `.env.example` → `.env` dan atur koneksi database.
+2. Install dependensi PHP dan JS:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+composer install
+npm install
+npm run dev
+```
 
-## Laravel Sponsors
+3. Migrasi dan seeder (opsional):
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+php artisan migrate --seed
+php artisan storage:link
+```
 
-### Premium Partners
+4. Jalankan server lokal:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+php artisan serve
+```
 
-## Contributing
+## Endpoint Penting (petunjuk cepat)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- Petugas Dashboard: `/petugas/dashboard`
+- Manajemen Peminjaman (petugas): `/petugas/peminjamans` — approve / reject / serahkan
+- Manajemen Pengembalian (petugas): `/petugas/pengembalians` — proses pengembalian (`create` form menuliskan tanggal, jumlah, kondisi)`
+- Peminjam (user): `/peminjam/peminjamans`, `/peminjam/pengembalians`, `/peminjam/dendas`
 
-## Code of Conduct
+Catatan: nama route lengkap di `routes/web.php` menggunakan prefix `petugas.` / `peminjam.` / `admin.`; contoh: `petugas.peminjamans.approve`, `petugas.pengembalians.store`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Catatan Implementasi yang Perlu Diperhatikan
 
-## Security Vulnerabilities
+- Pengembalian: denda otomatis dibuat saat proses pengembalian jika terlambat atau kondisi alat tidak baik. Besaran denda ada di `PengembalianController`.
+- Penyerahan alat (`hand-over`) diimplementasikan sebagai route POST bernama `petugas.peminjamans.hand-over`.
+- Upload bukti pembayaran denda untuk peminjam memakai disk `public` — pastikan `php artisan storage:link` dijalankan.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Pengujian Manual Singkat
 
-## License
+1. Login sebagai petugas → buka `/petugas/peminjamans` → setujui permintaan → tombol `Serahkan` akan membuka modal konfirmasi.
+2. Login sebagai petinjam → buat permintaan peminjaman → setelah dikembalikan petugas, cek `/peminjam/dendas` jika ada denda.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Kontribusi & Pengembangan
+
+- Ikuti alur branch: buat feature branch, push, dan buka PR.
+- Jalankan `php artisan test` jika ada test suite ditambahkan.
+
+## Lisensi
+
+Project ini disesuaikan untuk kebutuhan internal; lisensi default MIT.
+
+---
+
+File dokumentasi utama: [README.md](README.md)

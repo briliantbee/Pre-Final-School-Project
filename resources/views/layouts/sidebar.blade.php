@@ -110,7 +110,11 @@
 
             <!-- Navigation -->
             <nav class="flex-1 overflow-y-auto custom-scrollbar px-3 py-4 space-y-1">
-                @yield('navigation')
+                @if(optional(Auth::user()->role)->nama_role === 'peminjam')
+                    @include('peminjam.partials.sidebar')
+                @else
+                    @yield('navigation')
+                @endif
             </nav>
 
             <!-- Logout Button -->
@@ -146,13 +150,7 @@
                     </div>
                     
                     <div class="flex items-center space-x-3">
-                        <!-- Notifications (Optional) -->
-                        <button class="relative p-2 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg hidden sm:block">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                            </svg>
-                            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                        </button>
+                      
 
                         <!-- Profile Dropdown -->
                         <div x-data="{ open: false }" class="relative">

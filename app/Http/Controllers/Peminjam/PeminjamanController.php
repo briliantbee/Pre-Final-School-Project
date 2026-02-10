@@ -67,16 +67,8 @@ class PeminjamanController extends Controller
                     ->with('error', 'Alat tidak tersedia untuk dipinjam.');
             }
             
-            // Check if user already has active borrowing for this alat
-            $hasActiveBorrowing = auth()->user()->peminjamans()
-                ->where('alat_id', $alat->id)
-                ->whereIn('status', ['dipinjam', 'disetujui', 'menunggu_konfirmasi'])
-                ->exists();
-                
-            if ($hasActiveBorrowing) {
-                return redirect()->route('peminjam.alats.show', $alat)
-                    ->with('error', 'Anda sudah memiliki peminjaman aktif untuk alat ini.');
-            }
+            // Note: allow opening create form even if user has a pending peminjaman;
+            // availability will be enforced on store to avoid accidental double-booking.
         }
         
         $alats = Alat::where('status', 'tersedia')
@@ -101,19 +93,15 @@ class PeminjamanController extends Controller
 
         $alat = Alat::findOrFail($validated['alat_id']);
         
-        // Check availability
-        if ($alat->stok_tersedia < $validated['jumlah']) {
-            return back()->with('error', 'Stok alat tidak mencukupi.');
-        }
+        // Calculate reserved quantity (including pending) to avoid overbooking
+        $reserved = $alat->peminjamans()
+            ->whereIn('status', ['menunggu_konfirmasi', 'disetujui', 'dipinjam'])
+            ->sum('jumlah');
 
-        // Check if user already has active borrowing for this alat
-        $hasActiveBorrowing = auth()->user()->peminjamans()
-            ->where('alat_id', $alat->id)
-            ->whereIn('status', ['dipinjam', 'disetujui', 'menunggu_konfirmasi'])
-            ->exists();
-            
-        if ($hasActiveBorrowing) {
-            return back()->with('error', 'Anda sudah memiliki peminjaman aktif untuk alat ini.');
+        $available = $alat->stok - $reserved;
+
+        if ($validated['jumlah'] > $available) {
+            return back()->with('error', 'Stok alat tidak mencukupi.');
         }
 
         DB::transaction(function () use ($validated) {
