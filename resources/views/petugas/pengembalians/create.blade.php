@@ -24,7 +24,7 @@
         </div>
     @endif
 
-    <form x-data="{
+        <form x-data="{
             selectedId: '{{ old('peminjaman_id', '') }}',
             peminjamanMap: {
                 @foreach($peminjamans as $pm)
@@ -41,7 +41,8 @@
                     jumlahInput.max = data.max;
                     if (parseInt(jumlahInput.value) > data.max) jumlahInput.value = data.max;
                 }
-            }
+            },
+            showConfirm: false
         }" x-init="updateDefaults($el)" @change="updateDefaults($el)" action="{{ route('petugas.pengembalians.store') }}" method="POST" class="bg-white p-6 rounded shadow">
         @csrf
 
@@ -90,17 +91,16 @@
 
         <div class="flex justify-end gap-2">
             <a href="{{ route('petugas.pengembalians.index') }}" class="px-4 py-2 border rounded">Batal</a>
-            <button type="button" @click="$dispatch('open-confirm')" class="px-4 py-2 bg-blue-600 text-white rounded">Proses Pengembalian</button>
+            <button type="button" @click="showConfirm = true" class="px-4 py-2 bg-blue-600 text-white rounded">Proses Pengembalian</button>
         </div>
-
         <!-- Confirmation modal -->
-        <div x-data @open-confirm.window="$el.__open = true" x-init="$el.__open = false" x-show="$el.__open" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style="display:none;">
+        <div x-show="showConfirm" x-cloak @click.self="showConfirm = false" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style="display:none;">
             <div class="bg-white rounded-lg w-full max-w-md p-6 shadow-xl">
                 <h3 class="text-lg font-semibold mb-3">Konfirmasi Pengembalian</h3>
                 <div class="text-sm text-gray-700 mb-4">Anda akan memproses pengembalian. Pastikan data sudah benar.</div>
                 <div class="flex justify-end gap-2">
-                    <button type="button" @click="$el.__open = false" class="px-4 py-2 border rounded">Batal</button>
-                    <button type="submit" @click="$el.__open = false" class="px-4 py-2 bg-blue-600 text-white rounded">Ya, Proses</button>
+                    <button type="button" @click="showConfirm = false" class="px-4 py-2 border rounded">Batal</button>
+                    <button type="submit" @click="showConfirm = false" class="px-4 py-2 bg-blue-600 text-white rounded">Ya, Proses</button>
                 </div>
             </div>
         </div>
