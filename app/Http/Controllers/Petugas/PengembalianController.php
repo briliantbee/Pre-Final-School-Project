@@ -117,6 +117,9 @@ class PengembalianController extends Controller
             $alat = $peminjaman->alat;
             $alat->increment('stok_tersedia', $validated['jumlah_dikembalikan']);
             
+            // Refresh model to get updated stock value
+            $alat->refresh();
+            
             if ($alat->stok_tersedia > 0 && $alat->status === 'tidak_tersedia') {
                 $alat->update(['status' => 'tersedia']);
             }
@@ -173,5 +176,93 @@ class PengembalianController extends Controller
         ]);
         
         return view('petugas.pengembalians.show', compact('pengembalian'));
+    }
+
+    /**
+     * Export pengembalian data to Excel (CSV format)
+     */
+    public function exportExcel(Request $request)
+    {
+        $query = Pengembalian::with(['peminjaman.user', 'peminjaman.alat', 'diterimaDosen', 'denda']);
+
+        // Apply filters from request
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('peminjaman', function($q) use ($search) {
+                $q->where('kode_peminjaman', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($subQ) use ($search) {
+                      $subQ->where('username', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('kondisi')) {
+            $query->where('kondisi_alat', $request->kondisi);
+        }
+
+        if ($request->filled('terlambat')) {
+            $query->where('terlambat', $request->terlambat === 'ya');
+        }
+
+        $pengembalians = $query->latest()->get();
+
+        $filename = 'laporan_pengembalian_' . date('Y-m-d_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
+
+        $callback = function() use ($pengembalians) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8 encoding
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            // Header row
+            fputcsv($file, [
+                'Kode Peminjaman',
+                'Peminjam',
+                'Alat',
+                'Jumlah Dikembalikan',
+                'Tanggal Pengembalian',
+                'Kondisi Alat',
+                'Terlambat',
+                'Hari Terlambat',
+                'Denda',
+                'Diterima Oleh',
+                'Keterangan'
+            ]);
+
+            // Data rows
+            foreach ($pengembalians as $pengembalian) {
+                $denda = $pengembalian->denda;
+                fputcsv($file, [
+                    $pengembalian->peminjaman->kode_peminjaman ?? '-',
+                    $pengembalian->peminjaman->user->username ?? '-',
+                    $pengembalian->peminjaman->alat->nama_alat ?? '-',
+                    $pengembalian->jumlah_dikembalikan,
+                    $pengembalian->tanggal_pengembalian?->format('d/m/Y H:i'),
+                    match($pengembalian->kondisi_alat) {
+                        'baik' => 'Baik',
+                        'rusak' => 'Rusak',
+                        'hilang' => 'Hilang',
+                        default => $pengembalian->kondisi_alat
+                    },
+                    $pengembalian->terlambat ? 'Ya' : 'Tidak',
+                    $pengembalian->hari_terlambat ?? '0',
+                    $denda ? 'Rp ' . number_format($denda->jumlah_denda, 0, ',', '.') : '-',
+                    $pengembalian->diterimaDosen->username ?? '-',
+                    $pengembalian->keterangan ?? '-'
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

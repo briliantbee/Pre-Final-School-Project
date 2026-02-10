@@ -111,9 +111,11 @@ Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')
     Route::post('peminjamans/{peminjaman}/approve', [PetugasPeminjamanController::class, 'approve'])->name('peminjamans.approve');
     Route::post('peminjamans/{peminjaman}/reject', [PetugasPeminjamanController::class, 'reject'])->name('peminjamans.reject');
     Route::post('peminjamans/{peminjaman}/hand-over', [PetugasPeminjamanController::class, 'handOver'])->name('peminjamans.hand-over');
+    Route::get('peminjamans/export/excel', [PetugasPeminjamanController::class, 'exportExcel'])->name('peminjamans.export');
     
     // Pengembalian Management
     Route::resource('pengembalians', PetugasPengembalianController::class)->except(['edit', 'update', 'destroy']);
+    Route::get('pengembalians/export/excel', [PetugasPengembalianController::class, 'exportExcel'])->name('pengembalians.export');
     
     // Denda Management
     Route::resource('dendas', PetugasDendaController::class)->only(['index', 'show']);
@@ -121,6 +123,7 @@ Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')
     
     // Alat (View Only)
     Route::resource('alats', PetugasAlatController::class)->only(['index', 'show']);
+    Route::get('alats/export/excel', [PetugasAlatController::class, 'exportExcel'])->name('alats.export');
 });
 
 /*
