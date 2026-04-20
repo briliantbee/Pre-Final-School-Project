@@ -1,0 +1,72 @@
+No.,ID Tes,Modul,Skenario Pengujian,Langkah-langkah,Data Uji (Jika Perlu),Hasil yang Diharapkan,Hasil Aktual (Lulus/Gagal),,
+1,AUTH-01,Autentikasi,Gagal - Akses halaman admin tanpa login,"1. Pastikan logout.
+2. Akses /admin/dashboard langsung.",-,Pengguna dialihkan ke /login.,Lulus,,
+2,AUTH-02,Autentikasi,Gagal - Registrasi (konfirmasi password salah),"1. Buka /register
+2. Isi data valid tapi isi Confirm Password berbeda.",Pass: petugas123 / Confirm: petugas1234,Registrasi gagal; pesan validasi muncul.,Lulus,,
+3,AUTH-03,Autentikasi,Gagal - Registrasi (username sudah terpakai),"1. Buka /register
+2. Gunakan username yang sudah ada di DB.",username: existing_user,Registrasi gagal; muncul pesan username telah digunakan.,Lulus,,
+4,AUTH-04,Autentikasi,Sukses - Registrasi baru,"1. Buka /register
+2. Isi data valid
+3. Submit",-,Registrasi berhasil; user otomatis login dan dialihkan ke dashboard.,Lulus,,
+5,AUTH-05,Autentikasi,Gagal - Login (password salah),"1. Buka /login
+2. Isi username benar
+3. Isi password salah
+4. Submit",Username: user_test / Pass: wrongpass,Login gagal; pesan kredensial tidak cocok.,Lulus,,
+6,AUTH-06,Autentikasi,Sukses - Login,"1. Buka /login
+2. Isi username & password benar
+3. Submit",-,Login berhasil; dialihkan sesuai role.,Lulus,,
+7,AUTH-07,Autentikasi,Sukses - Logout,"1. Login
+2. Klik menu user -> Logout",-,Logout berhasil; dialihkan ke halaman login.,Lulus,,
+8,DASH-01,Dashboard,Validasi kartu statistik stok,"1. Catat nilai kartu 'Total Stok'
+2. Tambah alat baru stok 10
+3. Kembali ke Dashboard",-,Kartu bertambah +10 sesuai penambahan.,Lulus,,
+9,DASH-02,Dashboard,Validasi kartu peminjaman aktif,"1. Catat nilai 'Sedang Dipinjam'
+2. Buat peminjaman baru status dipinjam
+3. Cek dashboard",-,Nilai bertambah 1.,Lulus,,
+10,DASH-03,Dashboard,Validasi daftar peminjaman terakhir,"1. Buat peminjaman baru
+2. Kembali ke Dashboard",Peminjam: Budi,Transaksi muncul di urutan teratas tabel.,Lulus,,
+11,MST-KAT-01,Master Kategori,Gagal - Create kategori tanpa nama,"1. Buka halaman Kategori
+2. Klik Tambah
+3. Kosongkan nama -> Simpan",Nama: (kosong),Validasi gagal; pesan wajib diisi untuk nama.,Lulus,,
+12,MST-KAT-02,Master Kategori,Sukses - Create kategori,"1. Tambah kategori baru 'Tenda Dome'
+2. Simpan",-,Kategori tersimpan dan tampil di tabel.,Lulus,,
+13,MST-ALAT-01,Master Alat,Sukses - Tambah alat dan thumbnail,"1. Buka Tambah Alat
+2. Isi data lengkap + upload gambar tenda.jpg
+3. Simpan",File: tenda.jpg,Data tersimpan; thumbnail muncul di tabel.,Lulus,,
+14,MST-ALAT-02,Master Alat,Sukses - Pagination daftar alat,"1. Pastikan >10 alat
+2. Buka Manajemen Alat
+3. Klik halaman 2",-,Tabel menampilkan halaman kedua dengan data,Lulus,,
+15,MST-USER-01,Master User,Sukses - CRUD user,"1. Tambah user baru
+2. Edit user
+3. Cari user
+4. Hapus user",-,Semua operasi CRUD berjalan normal.,Lulus,,
+16,TRX-01,Transaksi,Gagal - Validasi stok saat tambah peminjaman,"1. Buka form tambah peminjaman
+2. Pilih alat stok 2
+3. Isi qty 5 -> Simpan",Stok:2 Input:5,Gagal; muncul pesan stok tidak mencukupi.,Lulus,,
+17,TRX-02,Transaksi,Sukses - Approve peminjaman mengurangi stok,"1. Buat peminjaman qty 5 pada alat stok 50
+2. Petugas approve peminjaman
+3. Cek stok alat",Stok awal:50 Pinjam:5,Stok berkurang jadi 45.,Lulus,,
+18,TRX-03,Transaksi,Sukses - Hand-over ubah status jadi dipinjam,"1. Peminjaman disetujui
+2. Petugas lakukan penyerahan (hand-over)",-,Status berubah menjadi dipinjam.,Lulus,,
+19,TRX-04,Transaksi,Sukses - Proses pengembalian mengembalikan stok,"1. Proses pengembalian untuk transaksi dipinjam
+2. Simpan pemrosesan",Jumlah dikembalikan: sesuai,Stok bertambah sesuai jumlah yang dikembalikan.,Lulus,,
+20,TRX-05,Transaksi,Sukses - Denda keterlambatan terhitung,"1. Pilih pengembalian yang terlambat 2 hari
+2. Proses pengembalian",Telat:2 hari Denda per hari: 10.000,Sistem menghitung denda total 20.000.,Lulus,,
+21,TRX-06,Transaksi,Gagal - Edit peminjaman (validasi stok),"1. Pilih peminjaman aktif qty 2
+2. Edit menjadi qty 100
+3. Simpan",-,Gagal; muncul pesan stok tidak cukup.,Lulus,,
+22,EXP-01,Export,Sukses - Export Peminjaman (CSV),"1. Buka Manajemen Peminjaman (Petugas)
+2. Klik Export Excel (CSV)",-,File CSV terdownload; kolom lengkap dan encoding OK.,Lulus,,
+23,EXP-02,Export,Sukses - Export Pengembalian (CSV),"1. Buka Manajemen Pengembalian
+2. Klik Export",-,File CSV berisi kolom denda/terlambat,Lulus,,
+24,EXP-03,Export,Sukses - Export Alat (CSV),"1. Buka Katalog Alat (Petugas)
+2. Klik Export",-,File CSV berisi stok & peminjaman aktif.,Lulus,,
+25,UI-01,UI/UX,Validasi modal persetujuan peminjaman,"1. Buka daftar peminjaman
+2. Klik Approve pada salah satu baris",-,Modal muncul; aksi submit bekerja.,Lulus,,
+26,ACT-01,Aktivitas,Sukses - Lihat detail aktivitas,"1. Buka modul Aktivitas (Admin)
+2. Klik detail pada salah satu entri",-,Halaman detail menampilkan aktivitas,Lulus,,
+27,SEC-01,Security,Validasi role-based access control,"1. Login sebagai peminjam
+2. Coba akses admin/*
+3. Login sebagai petugas dan coba akses admin/* and petugas/*",-,Akses ditolak/mengarahkan bila tidak berwenang.,Lulus,,
+28,NOTIF-01,Notifikasi,Validasi flash messages setelah aksi CRUD,"1. Lakukan create/update/delete pada salah satu modul
+2. Amati flash message",-,Flash message muncul sesuai jenis aksi.,Lulus,,

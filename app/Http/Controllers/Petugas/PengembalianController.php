@@ -101,7 +101,7 @@ class PengembalianController extends Controller
             $tanggalKembali = Carbon::parse($validated['tanggal_pengembalian']);
             $tanggalBerakhir = Carbon::parse($peminjaman->tanggal_berakhir_peminjaman);
             $terlambat = $tanggalKembali->gt($tanggalBerakhir);
-            $hariTerlambat = $terlambat ? $tanggalKembali->diffInDays($tanggalBerakhir) : 0;
+            $hariTerlambat = $terlambat ? $tanggalBerakhir->diffInDays($tanggalKembali) : 0;
 
             $validated['terlambat'] = $terlambat;
             $validated['hari_terlambat'] = $hariTerlambat;
@@ -126,29 +126,34 @@ class PengembalianController extends Controller
 
             // Create denda if needed
             if ($terlambat || $validated['kondisi_alat'] !== 'baik') {
-                $totalDenda = 0;
+                $dendaKeterlambatan = 0;
+                $dendaKerusakan = 0;
 
-                // Denda keterlambatan (misalnya 5000 per hari)
+                // Denda keterlambatan (5000 per hari, minimal 1 hari jika terlambat)
                 if ($terlambat) {
-                    $totalDenda += $hariTerlambat * 5000;
+                    $hariDenda = $hariTerlambat > 0 ? $hariTerlambat : 1; // Minimal 1 hari
+                    $dendaKeterlambatan = $hariDenda * 5000;
                 }
 
                 // Denda kerusakan/kehilangan
                 if ($validated['kondisi_alat'] === 'rusak') {
-                    $totalDenda += 50000; // Misalnya 50k untuk rusak
+                    $dendaKerusakan = 50000; // Rp 50.000 untuk rusak
                 } elseif ($validated['kondisi_alat'] === 'hilang') {
-                    $totalDenda += 200000; // Misalnya 200k untuk hilang
+                    $dendaKerusakan = 200000; // Rp 200.000 untuk hilang
                 } elseif ($validated['kondisi_alat'] === 'tidak_lengkap') {
-                    $totalDenda += 25000; // Misalnya 25k untuk tidak lengkap
+                    $dendaKerusakan = 25000; // Rp 25.000 untuk tidak lengkap
                 }
 
-                if ($totalDenda > 0) {
-                    Denda::create([
-                        'pengembalian_id' => $pengembalian->id,
-                        'total_denda' => $totalDenda,
-                        'status' => 'belum_dibayar',
-                    ]);
-                }
+                $totalDenda = $dendaKeterlambatan + $dendaKerusakan;
+
+                // Create denda record
+                Denda::create([
+                    'pengembalian_id' => $pengembalian->id,
+                    'denda_keterlambatan' => $dendaKeterlambatan,
+                    'denda_kerusakan' => $dendaKerusakan,
+                    'total_denda' => $totalDenda,
+                    'status' => 'belum_dibayar', // Always belum_dibayar if denda created
+                ]);
             }
 
             // Log activity
@@ -254,7 +259,7 @@ class PengembalianController extends Controller
                     },
                     $pengembalian->terlambat ? 'Ya' : 'Tidak',
                     $pengembalian->hari_terlambat ?? '0',
-                    $denda ? 'Rp ' . number_format($denda->jumlah_denda, 0, ',', '.') : '-',
+                    $denda ? 'Rp ' . number_format($denda->total_denda, 0, ',', '.') : '-',
                     $pengembalian->diterimaDosen->username ?? '-',
                     $pengembalian->keterangan ?? '-'
                 ]);
